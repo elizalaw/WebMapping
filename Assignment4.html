@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Swipe between maps</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v3.2.0/mapbox-gl.css' rel='stylesheet' />
+		
+    <!-- JS and CSS for the swipe plugin -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.js'></script>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-compare/v0.4.0/mapbox-gl-compare.css' type='text/css' />
+     
+    <style>
+        
+    /* body CSS */
+    body { margin:0; padding:0;overflow: hidden;}
+    body * {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+            user-select: none;
+        }
+	
+    /* map CSS */
+    .map {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        } 
+        
+    /* title CSS */    
+    #title { z-index: 9999; 
+        background-color: #edf8fb; 
+        opacity: 80%; 
+        text-align: center 
+        }
+    
+    /* owners legend CSS */
+    .legend-owners {
+        font-family: Arial, sans-serif;
+        background-color: #edf8fb;
+        border-radius: 5px;
+        padding: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 9999999;
+    }
+    
+    /* renters legend CSS */
+    .legend-renters {
+        font-family: Arial, sans-serif;
+        background-color: #edf8fb;
+        border-radius: 5px;
+        padding: 10px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 9999999;
+    }
+    
+    /* legend item CSS */    
+    .legend-item {
+        margin-bottom: 5px;
+    }
+        
+    /* legend color CSS */
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #000;
+        display: inline-block;
+        vertical-align: middle;
+    }
+    
+    /* legend labek CSS */
+    .legend-label {
+        display: inline-block;
+        margin-left: 5px;
+        vertical-align: middle;
+    }
+       
+    </style>
+</head>
+<body>
+    
+    <!-- div for comparison line -->
+    <div id="comparison-container">
+  		<div id='owners' class='map'></div>  <!-- div for owners map div -->
+  		<div id='renters' class='map'></div> <!--  div for renters map div -->
+    </div>
+
+    <!-- div for owners map legend -->
+    <div class="legend-owners">
+         <!--  owners info-->
+        Owners
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: #edf8fb;"></div>
+            <div class="legend-label">&lt; 17.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #b3cde3;"></div>
+            <div class="legend-label">17.0 - 22.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #8c96c6;"></div>
+            <div class="legend-label">22.0 - 27.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #8856a7;"></div>
+            <div class="legend-label">27.0 - 32.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #810f7c;"></div>
+            <div class="legend-label">32.0+</div>
+        </div>
+    </div>
+        
+    <!-- div for renters map legend --> 
+    <div class="legend-renters">
+        <!--  renters info-->
+         Renters
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #edf8fb;"></div>
+            <div class="legend-label">&lt; 17.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #b3cde3;"></div>
+            <div class="legend-label">17.0 - 22.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #8c96c6;"></div>
+            <div class="legend-label">22.0 - 27.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #8856a7;"></div>
+            <div class="legend-label">27.0 - 32.0</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background-color: #810f7c;"></div>
+            <div class="legend-label">32.0+</div>
+        </div>
+        
+    </div>  
+   
+    <!-- div for title panel -->
+    <div id='title'>
+            <h1>Percentage of Owners vs. Renters in Portland, OR</h1>
+     		<h2>By: Eliza Lawrence</h2>
+ 	</div>
+    
+    <script>
+        //add your Mapbox access token and map variable here!
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZWxpemFsIiwiYSI6ImNsdWxoaWxybDAwYnEyaW9rYWszNXczYmcifQ.mdyV8DR-fe17NptGd_utdA';
+        
+        // Create a popup, but don't add it to the map yet.
+        var popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false
+            });
+        
+        // Owner map
+        var ownerMap = new mapboxgl.Map({
+            container: 'owners', // owners map div 
+            style: 'mapbox://styles/mapbox/dark-v10', // Mapbox dark style 
+            center: [-122.67366292086454, 45.518189051974346], 
+            zoom: 10
+        });
+        
+        ownerMap.on('load', function() {
+            // the rest of the owner data code will go in here
+            ownerMap.addLayer({
+                id: 'Owner Data',
+                type: "fill",
+              source: {
+                type: 'vector',
+                url: 'mapbox://elizal.5u7osvu3'  //input your tileset ID url e.g. 'mapbox://jomerson.6ykhlovc' 
+              },
+                'source-layer': 'Owner-Renter-Pop-1f506m', //input your source layer name e.g. 'Owner-Renter-Pop-ca08iw'
+              paint: {
+                'fill-color':
+                  ["step",
+                    ["get", "Own"],
+                    "#edf8fb",
+                    17.0,
+                    "#b3cde3",
+                    22.0,
+                    "#8c96c6",
+                    27.0,
+                    "#8856a7",
+                    32.0,
+                    "#810f7c"
+                  ],
+                  "fill-opacity": 0.7 
+              }       
+        });
+            
+            ownerMap.on('mousemove', 'Owner Data', function (e) {
+        
+                    // Change the cursor style as a UI indicator.
+                    ownerMap.getCanvas().style.cursor = 'pointer';
+
+                    var coordinates = e.lngLat;
+                    var description = e.features[0].properties.Own;
+
+                    // Populate the popup and set its coordinates
+                    // based on the feature found.
+                    popup.setLngLat(coordinates)
+                        .setHTML("Owners: " + description + "%")
+                        .addTo(ownerMap);
+                });
+
+                ownerMap.on('mouseleave', 'Owner Data', function () {
+                    ownerMap.getCanvas().style.cursor = '';
+                    popup.remove();
+                });
+            
+        });
+        
+        // Renter map
+        var renterMap = new mapboxgl.Map({
+            container: 'renters', // owners map div 
+            style: 'mapbox://styles/mapbox/dark-v10', // Mapbox light style so we can observe the swipe
+            center: [-122.67366292086454, 45.518189051974346],// Use the same center as your other map so that they are perfectly aligned
+            zoom: 10 
+        });
+        
+        renterMap.on('load', function() {
+          // the rest of the renter data code will go in here
+          renterMap.addLayer({
+                id: 'Renter Data',
+                type: "fill",
+                source: {
+                    type: 'vector',
+                    url: 'mapbox://elizal.5u7osvu3' //input your tileset ID URL
+                },
+                    'source-layer': 'Owner-Renter-Pop-1f506m', //input your source layer name e.g. Owner-Renter-Pop-dr7310
+                paint: {
+                    'fill-color':
+                      ["step",
+                        ["get", "Rent"],
+                        "#edf8fb",
+                        17.0,
+                        "#b3cde3",
+                        22.0,
+                        "#8c96c6",
+                        27.0,
+                        "#8856a7",
+                        32.0,
+                        "#810f7c"],
+                        "fill-opacity": 0.7  
+                    }
+          }); 
+            
+            renterMap.on('mousemove', 'Renter Data', function (e) {
+        
+                    // Change the cursor style as a UI indicator.
+                    renterMap.getCanvas().style.cursor = 'pointer';
+    
+                    var coordinates = e.lngLat;
+                    var description = e.features[0].properties.Rent;
+    
+                    // Populate the popup and set its coordinates
+                    // based on the feature found.
+                    popup.setLngLat(coordinates)
+                        .setHTML("Renters: " + description + "%")
+                        .addTo(renterMap);
+                });
+
+                renterMap.on('mouseleave', 'Renter Data', function () {
+     	          renterMap.getCanvas().style.cursor = '';
+     	          popup.remove();
+                });
+            
+        });
+        
+        // A selector or reference to HTML element - shared container
+        var container = '#comparison-container';
+
+        var map = new mapboxgl.Compare(ownerMap, renterMap, container, {
+        })
+    
+    </script>
+
+    </body>
+</html>
