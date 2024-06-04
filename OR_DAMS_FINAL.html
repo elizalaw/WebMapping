@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Oregon Dams</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v2.2.0/mapbox-gl.js"></script>
+    
+    <!--   Link to Google font-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    </style>
+    </head>
+<body>
+<style>
+    body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    
+    /*  style for paragraph tags */
+        p {
+            color: white;
+        }
+
+        /* style for heading level 4 tags */
+        h4 {
+            color: white;
+            margin-left: 10px;
+            font-size: 20px;
+            font-family: 'Manrope', serif;
+        }
+    
+    .filter-group {
+        font-family: 'Manrope', serif;
+        font-weight: 400;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 1;
+        border-radius: 3px;
+        width: 180px;
+        color: #fff;
+    }
+
+    .filter-group input[type='checkbox']:first-child + label {
+        border-radius: 3px 3px 0 0;
+    }
+
+    .filter-group label:last-child {
+        border-radius: 0 0 3px 3px;
+        border: none;
+    }
+
+    .filter-group input[type='checkbox'] {
+        display: none;
+    }
+
+    .filter-group input[type='checkbox'] + label {
+        background-color: #3386c0;
+        display: block;
+        cursor: pointer;
+        padding: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    }
+
+    .filter-group input[type='checkbox'] + label {
+        background-color: #3386c0;
+        text-transform: capitalize;
+    }
+
+    .filter-group input[type='checkbox'] + label:hover,
+    .filter-group input[type='checkbox']:checked + label {
+        background-color: #4ea0da;
+    }
+
+    .filter-group input[type='checkbox']:checked + label:before {
+        content: '✔';
+        margin-right: 5px;
+    }
+    
+    /* Override background color for checkboxes */
+    .filter-group input#poi-Water\ Supply + label {
+        background-color: #a6cee3;
+    }
+
+    .filter-group input#poi-Irrigation + label {
+        background-color: #1f78b4;
+    }
+
+    .filter-group input#poi-Other + label {
+        background-color: #b2df8a;
+    }
+
+    .filter-group input#poi-Hydroelectric + label {
+        background-color: #33a02c;
+    }
+
+    .filter-group input#poi-Recreation + label {
+        background-color: #fb9a99;
+    }
+
+    .filter-group input#poi-Flood\ Control + label {
+        background-color: #e31a1c;
+    }
+
+    .filter-group input#poi-Fish\ and\ Wildlife\ Pond + label {
+        background-color: #fdbf6f;
+    }
+
+    .filter-group input#poi-Navigation + label {
+        background-color: #ff7f00;
+    }
+    
+    .filter-group input#poi-Fire\ Protection\,\ Stock\,\ or\ Small\ Fish\ Pond + label {
+        background-color: #cab2d6;
+    }
+    
+    /*  style for items with the class "LegendContainer" */
+    .LegendContainer {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 2;
+        width: 300px;
+        height: 40px;
+        background: rgba(21, 23, 50, 0.8);
+        transition: width 2s, height 2s; /* this is the time it takes for the container to transition */
+        border-radius: 7px;
+    }
+
+    /*  style for items with the class "descriptionPanel" */
+    .descriptionPanel {
+        font-family: 'Manrope', serif; 
+        position: absolute;
+        bottom: 35px;
+        left: 20px;
+        z-index: 2;
+        width: 400px;
+        height: 40px;
+        background: rgba(21, 23, 50, 0.8);
+        transition: width 2s, height 2s;
+        overflow: hidden;     
+        border-radius: 7px;
+    }
+
+    /*  style for items with the class "descriptionPanel" when active */
+    .LegendContainer:active {
+        width: 240px;
+        height: 250px;
+    }
+
+    /* style for items with the class "legendItem" */
+    .legendItem {
+        margin: 0px;
+        padding-left: 55px;
+        display:inline-block;
+        margin:auto;
+        transform: translate(50%, 50%);
+    }
+
+    /* style for items with the class "layerDescription" */
+    .layerDescription {
+        font-family: 'Manrope', serif;
+        color: white;
+        padding-left: 10px;
+    }
+
+    /* style for the "chevron" arrow at the top of the description panel*/
+    .chevron {
+        position: relative;
+        margin-left: 45%;
+        font-size: x-large;
+        color: white;
+     }
+
+    /* style for the pop up boxes*/
+    .mapboxgl-popup-content { /* stle for the popup boxes */
+        font-family: 'Manrope', serif;
+        background-color: rgba(21, 23, 50, 0.8); /* color dark blue */ 
+        color: #f5f5f5; /* color of text within popup */
+        font-weight: 100; /* font thickness in popup*/
+        font-size: 10pt; /* font size in popup */
+    }
+    
+</style>
+    <div id="map"></div>
+    
+    <!--map description panel-->
+    <div class="descriptionPanel" id="descriptionPanel" style="height: 250px;">
+        <span onClick=panelSelect() id="glyph" class="chevron glyphicon glyphicon-chevron-down"></span>
+        <hr/>
+        <h4>Types of Dams in Oregon</h4>
+        <p style="margin-left: 10px; margin-right: 10px;">
+        This is a map showing every single dam in the state of Oregon as a circle. Data is taken from the US Department of Transportation. Circles are colored based on the type of dam, which you can also filter by. Click on a circle to learn more about the dam.
+        </p>
+    </div>
+    
+    <nav id="filter-group" class="filter-group"></nav>
+    
+
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoiZWxpemFsIiwiYSI6ImNsdWxoaWxybDAwYnEyaW9rYWszNXczYmcifQ.mdyV8DR-fe17NptGd_utdA';
+    
+    // ADD THE DATA HERE (II.2)
+    
+    var filterGroup = document.getElementById('filter-group');
+    
+    // Set bounds to state of OR
+    var bounds = [
+          [-126, 40], // Southwest coordinates
+          [-115, 48] // Northeast coordinates 
+    ];
+    
+    var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/light-v10',
+        center:  [-122.5542, 44.1541],
+        zoom: 7,
+        minZoom: 4,
+        maxBounds: bounds,
+        zoom: 6.5, // zoom level
+        minZoom: 3.8, // farthest you can zoom out
+        maxZoom: 15, // farthest you can zoom in 
+    });
+
+    // Define a function to map PrimaryPurposeID to a color
+    function getColor(primaryPurpose) {
+        switch (primaryPurpose) {
+            case 'Water Supply':
+                return '#a6cee3'; // Red
+            case 'Irrigation':
+                return '#1f78b4'; // Green
+            case 'Other':
+                return '#b2df8a'; // Green
+            case 'Hydroelectric':
+                return '#33a02c'; // Green
+            case 'Recreation':
+                return '#fb9a99'; // Green
+            case 'Flood Control':
+                return '#e31a1c'; // Green
+            case 'Fish and Wildlife Pond':
+                return '#fdbf6f'; // Green
+            case 'Navigation':
+                return '#ff7f00'; // Green
+            case 'Fire Protection, Stock, or Small Fish Pond':
+                return '#cab2d6'; // Green
+            // Add cases for other PrimaryPurposeId values
+            default:
+                return '#338AFF'; // Blue (or any default color)
+        }
+    }
+    
+fetch('https://elizalaw.github.io/WebMapping/OR_DAMS_2.geojson')
+    .then(response => response.json())
+    .then(data => {
+        // Do something with the GeoJSON data, like adding it to the map and processing it
+        places = data; // Assuming `places` is a global variable
+        // Now you can proceed with the rest of your code, including the map.on('load') function
+    })
+    .catch(error => console.error('Error fetching GeoJSON data:', error));
+
+    // Map's On 'load' function.
+    map.on('load', function () {
+        // Add a GeoJSON source containing place coordinates and information.
+        map.addSource('places', {
+            'type': 'geojson',
+            'data': 'https://elizalaw.github.io/WebMapping/OR_DAMS_2.geojson'
+        });
+
+        // add a new layer using the points
+        places.features.forEach(function (feature) {
+            var primaryPurpose = feature.properties['primaryPurpose']; // Get the value from the 'PrimaryPurposeId' field in the data
+            var layerID = 'poi-' + primaryPurpose;
+
+            // Add a layer for this PrimaryPurposeID if there is not a layer with this name already.
+            if (!map.getLayer(layerID)) {
+            map.addLayer({
+                'id': layerID,
+                'type': 'circle',
+                'source': 'places',
+                'paint': {
+                    'circle-color': getColor(primaryPurpose), // Use color based on PrimaryPurposeId
+                    'circle-radius': 8,
+                    'circle-opacity': 0.8,
+                    'circle-stroke-color': '#000', // Outline color
+                    'circle-stroke-width': 1.5 // Outline width
+                },
+                // Filter the dataset for all features that have the `PrimaryPurposeID` value equal to the current `primaryPurposeID`.
+                'filter': ['==', 'primaryPurpose', primaryPurpose]
+            });
+
+                // Add checkbox and label elements for the layer.
+                var input = document.createElement('input');
+                input.type = 'checkbox';
+                input.id = layerID;
+                input.checked = true;
+                input.style.backgroundColor = getColor(primaryPurpose); // Set background color of checkbox
+                filterGroup.appendChild(input); // Append checkbox to the body or another container
+
+                var label = document.createElement('label');
+                label.setAttribute('for', layerID);
+                label.textContent = primaryPurpose;
+                filterGroup.appendChild(label); // Append label to the body or another container
+
+                // When the checkbox changes, update the visibility of the layer.
+                input.addEventListener('change', function (e) {
+                    map.setLayoutProperty(
+                    layerID,
+                    'visibility',
+                    e.target.checked ? 'visible' : 'none'
+                    );
+                });
+    
+                // Add popup code here (III.2)
+                    map.on('click', layerID, function (e) {
+                        var coordinates = e.features[0].geometry.coordinates.slice();
+                        var name = e.features[0].properties.name;
+                        var riverName = e.features[0].properties.riverName;
+                        var county = e.features[0].properties.county;
+                        var cityCorrect = e.features[0].properties.cityCorrect;
+                        var damHeight = e.features[0].properties.damHeight;
+                        var yearCompletedComplete = e.features[0].properties.yearCompletedComplete;
+                        
+                        var description = 
+                            "Name: " + name + 
+                            "<br>River Name: " + riverName + 
+                            "<br>County: " + county + 
+                            "<br>Nearest City: " + cityCorrect +
+                            "<br>Height of Dam (ft): " + damHeight +
+                            "<br>Year Built: " + yearCompletedComplete;
+                        
+                        new mapboxgl.Popup()
+                        .setLngLat(coordinates)
+                        .setHTML(description)
+                        .addTo(map);
+                    });                     
+
+                    // Add mouseover code here (V.1)
+                    // Change the cursor to a pointer when the mouse is over the places layer.
+                    map.on('mouseenter', layerID, function () {
+                        map.getCanvas().style.cursor = 'pointer';
+                    });
+
+                    // Change it back to a pointer when it leaves.
+                    map.on('mouseleave', layerID, function () {
+                        map.getCanvas().style.cursor = '';
+                    });
+                
+               // Add mouseover code here (V.1)
+                
+        }
+     });
+    });
+    
+// Add zoom and rotation controls to the map.
+            map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+
+            // Legend interaction.     
+            var state = { panelOpen: true };
+
+            function panelSelect(e){
+                if(state.panelOpen) 
+                    {document.getElementById('descriptionPanel').style.height = '26px';
+                    document.getElementById('glyph').className = "chevron glyphicon glyphicon-chevron-up";
+                    state.panelOpen = false;} 
+
+                else {
+                  document.getElementById('descriptionPanel').style.height = '250px';
+                  document.getElementById('glyph').className = "chevron glyphicon glyphicon-chevron-down";
+                  state.panelOpen = true;
+                }
+            }
+
+</script>
+
+</body>
+</html>
